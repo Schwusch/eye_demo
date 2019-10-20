@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class TiltableStack extends StatefulWidget {
   final List<Widget> children;
   final Alignment alignment;
+  final Offset tiltTowards;
+  final Size size;
 
   const TiltableStack({
     Key key,
     this.children,
     this.alignment = Alignment.center,
+    this.tiltTowards,
+    this.size,
   }) : super(key: key);
 
   @override
@@ -19,13 +23,14 @@ class TiltableStackState extends State<TiltableStack>
   AnimationController _controller;
   Animation<double> pitchAnimation;
   Animation<double> yawAnimation;
+  double get maxPitch => 50;
+  double get maxYaw => 250;
 
   @override
   void initState() {
     super.initState();
     _controller =
-        AnimationController(duration: const Duration(seconds: 1), vsync: this)
-          ..forward(from: 1.0);
+        AnimationController(duration: const Duration(seconds: 1), vsync: this);
     yawAnimation = Tween<double>(
       begin: 0.0,
       end: 0.0,
@@ -44,6 +49,13 @@ class TiltableStackState extends State<TiltableStack>
         curve: Curves.elasticIn.flipped,
       ),
     );
+    updatePan(widget.tiltTowards);
+  }
+
+  @override
+  void didUpdateWidget(TiltableStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    updatePan(widget.tiltTowards);
   }
 
   @override
@@ -70,13 +82,28 @@ class TiltableStackState extends State<TiltableStack>
       );
 
   updatePan(Offset offset) {
-    final RenderBox box = context.findRenderObject();
-    final position = box.localToGlobal(Offset.zero);
-    final size = box.size;
-    final center =
-        Offset(position.dx + size.width / 2, position.dy + size.height / 2);
+    if (offset == null) {
+      cancelPan();
+      return;
+    }
 
-    pitchAnimation = nextAnimation(pitchAnimation, offset.dy - center.dy);
+    final RenderBox box = context.findRenderObject();
+
+    if(box == null) return;
+
+    final position = box.localToGlobal(Offset.zero);
+    final center =
+        Offset(position.dx + widget.size.width / 2, position.dy + widget.size.height / 2);
+
+    double pitch = offset.dy - center.dy;
+
+    if(pitch > 0) {
+      pitch = 50;
+    } else {
+      pitch = -50;
+    }
+
+    pitchAnimation = nextAnimation(pitchAnimation, pitch);
     yawAnimation = nextAnimation(yawAnimation, center.dx - offset.dx);
     _controller.forward(from: 0);
   }
@@ -84,9 +111,10 @@ class TiltableStackState extends State<TiltableStack>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
+      animation: _controller,
       builder: (_, __) {
-        var yaw = yawAnimation?.value ?? 0.0;
-        var pitch = pitchAnimation?.value ?? 0.0;
+        var yaw = yawAnimation.value.clamp(-maxYaw, maxYaw);
+        var pitch = pitchAnimation.value;
 
         return Stack(
           alignment: widget.alignment,
@@ -99,9 +127,9 @@ class TiltableStackState extends State<TiltableStack>
                     Transform(
                       transform: Matrix4.identity()
                         ..setEntry(3, 2, 0.001)
-                        ..rotateX(pitch * 0.0015)
-                        ..rotateY(yaw * 0.0015)
-                        ..translate(-yaw * i * 0.06, pitch * i * 0.06, 0),
+                        ..rotateX(yaw * 0.002)
+                        ..rotateY(pitch * 0.002)
+                        ..translate(widget.size.width * -yaw * i * 0.0004, widget.size.height * pitch * i * 0.001, 0),
                       child: element,
                       alignment: FractionalOffset.center,
                     ),
@@ -112,7 +140,6 @@ class TiltableStackState extends State<TiltableStack>
               .toList(),
         );
       },
-      animation: _controller,
     );
   }
 }
