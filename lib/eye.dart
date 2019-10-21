@@ -23,13 +23,19 @@ class Eye extends StatelessWidget {
       height = width / 2;
     } else if (width.isInfinite) {
       width = height * 2;
-    } else {
+    } else if (!(width / height).toString().startsWith("2")) {
       height = height.clamp(0, width / 2);
     }
 
     return Stack(
       alignment: Alignment.center,
       children: [
+        // This container is for fixing a weird Flutter web bug
+        Container(
+          width: width,
+          height: height,
+          color: Colors.transparent,
+        ),
         // Draw the outlines and red background first
         CustomPaint(
           painter: EyePainter(),

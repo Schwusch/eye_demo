@@ -8,9 +8,7 @@ void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        home: MyHomePage(),
-      );
+  Widget build(BuildContext context) => MaterialApp(home: MyHomePage());
 }
 
 class MyHomePage extends StatefulWidget {
@@ -32,29 +30,32 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.only(top: 20),
-        child: ListView(
-          children: [
-            Row(
-              children: [
-                Eye(
-                  size: Size(200, 200),
-                  lookAt: caret.stream,
-                  mirror: true,
-                ),
-                Eye(
-                  size: Size(200, 200),
-                  lookAt: caret.stream,
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TrackingTextInput(
-                  label: "Nothing you type goes unseen",
-                  hint: "Type something",
-                  onCaretMoved: caret.add),
-            ),
-          ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 450),
+          child: ListView(
+            children: [
+              Row(
+                children: [
+                  Eye(
+                    size: Size(200, 200),
+                    lookAt: caret.stream,
+                    mirror: true,
+                  ),
+                  Eye(
+                    size: Size(200, 200),
+                    lookAt: caret.stream,
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TrackingTextInput(
+                    label: "Nothing you type goes unseen",
+                    hint: "Type something",
+                    onCaretMoved: caret.add),
+              ),
+            ],
+          ),
         ),
       ),
     );
