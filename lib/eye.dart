@@ -16,6 +16,7 @@ class Eye extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The eye is designed for a ratio of width/height = 2
     double height = size.height;
     double width = size.width;
     if (height.isInfinite) {
@@ -29,6 +30,7 @@ class Eye extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
+        // Draw the outlines and red background first
         CustomPaint(
           painter: EyePainter(),
           child: Container(
@@ -36,10 +38,13 @@ class Eye extends StatelessWidget {
             width: width,
           ),
         ),
+        // Contain the "eye ball" in a ClipPath, to make the eye seem "inside"
         ClipPath(
           clipper: EyeClipper(),
+          // Shift the "eye ball" a little bit to the side for authenticity
           child: Transform.translate(
             offset: Offset(mirror ? -width * 0.05 : width * 0.05, 0),
+            // Here begins the moving "eye ball"
             child: StreamBuilder(
               stream: lookAt,
               builder: (context, snap) => TiltableStack(
@@ -76,8 +81,9 @@ class Eye extends StatelessWidget {
                           height: height * 0.35,
                           width: height * 0.35,
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.black),
-
+                            shape: BoxShape.circle,
+                            color: Colors.black,
+                          ),
                         ),
                         Positioned(
                           right: height * 0.25,
@@ -102,6 +108,7 @@ class Eye extends StatelessWidget {
   }
 }
 
+// The outer line is used by both EyePainter and EyeClipper, so it is extracted
 Path createEyePath(Size size) {
   Path path = Path();
   path.moveTo(size.width * 0.05, size.height * 0.5);
@@ -112,15 +119,18 @@ Path createEyePath(Size size) {
   return path;
 }
 
+// This painter draws the black outline and red background of the eye
 class EyePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Path path = createEyePath(size);
 
+    // First draw the red background
     Paint paint = Paint()
       ..color = Colors.redAccent.withOpacity(0.15)
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, paint);
+    // Draw the black outline of the eye
     paint
       ..color = Colors.black
       ..style = PaintingStyle.stroke
@@ -132,6 +142,7 @@ class EyePainter extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => oldDelegate != this;
 }
 
+// The EyeClipper removes rendered things outside its path, like the eyeball
 class EyeClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) => createEyePath(size);

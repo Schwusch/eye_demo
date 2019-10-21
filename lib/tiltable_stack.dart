@@ -23,7 +23,9 @@ class TiltableStackState extends State<TiltableStack>
   AnimationController _controller;
   Animation<double> pitchAnimation;
   Animation<double> yawAnimation;
+
   double get maxPitch => 50;
+
   double get maxYaw => 250;
 
   @override
@@ -82,6 +84,7 @@ class TiltableStackState extends State<TiltableStack>
       );
 
   updatePan(Offset offset) {
+    // null means go back to default
     if (offset == null) {
       cancelPan();
       return;
@@ -89,15 +92,16 @@ class TiltableStackState extends State<TiltableStack>
 
     final RenderBox box = context.findRenderObject();
 
-    if(box == null) return;
+    if (box == null) return; // Nothing can be done here, eject.
 
     final position = box.localToGlobal(Offset.zero);
-    final center =
-        Offset(position.dx + widget.size.width / 2, position.dy + widget.size.height / 2);
+    final center = Offset(position.dx + widget.size.width / 2,
+        position.dy + widget.size.height / 2);
 
     double pitch = offset.dy - center.dy;
 
-    if(pitch > 0) {
+    // It looks nicer when the eye distinctly look up or down
+    if (pitch > 0) {
       pitch = 50;
     } else {
       pitch = -50;
@@ -109,37 +113,39 @@ class TiltableStackState extends State<TiltableStack>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (_, __) {
-        var yaw = yawAnimation.value.clamp(-maxYaw, maxYaw);
-        var pitch = pitchAnimation.value;
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          var yaw = yawAnimation.value.clamp(-maxYaw, maxYaw);
+          var pitch = pitchAnimation.value;
 
-        return Stack(
-          alignment: widget.alignment,
-          children: widget.children
-              .asMap()
-              .map(
-                (i, element) {
-                  return MapEntry(
-                    i,
-                    Transform(
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.001)
-                        ..rotateX(yaw * 0.002)
-                        ..rotateY(pitch * 0.002)
-                        ..translate(widget.size.width * -yaw * i * 0.0004, widget.size.height * pitch * i * 0.001, 0),
-                      child: element,
-                      alignment: FractionalOffset.center,
-                    ),
-                  );
-                },
-              )
-              .values
-              .toList(),
-        );
-      },
-    );
-  }
+          return Stack(
+            alignment: widget.alignment,
+            children: widget.children
+                .asMap()
+                .map(
+                  (i, element) {
+                    return MapEntry(
+                      i,
+                      Transform(
+                        transform: Matrix4.identity()
+                          ..setEntry(3, 2, 0.001)
+                          ..rotateX(yaw * 0.002)
+                          ..rotateY(pitch * 0.002)
+                          // Scale the translation to the size of the widget
+                          // Otherwise small widgets translate a lot, and
+                          // large widgets barely see any difference
+                          ..translate(widget.size.width * -yaw * i * 0.0004,
+                              widget.size.height * pitch * i * 0.001, 0),
+                        child: element,
+                        alignment: FractionalOffset.center,
+                      ),
+                    );
+                  },
+                )
+                .values
+                .toList(),
+          );
+        },
+      );
 }
