@@ -1,7 +1,7 @@
 # Eye demo in Flutter
 A demo of an eye tracking a text input
 
-![](media/flutter_eye.gif)
+![](media/flutter_eyes.gif)
 
 ## Getting Started
 
