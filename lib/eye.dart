@@ -19,6 +19,9 @@ class Eye extends StatelessWidget {
     // The eye is designed for a ratio of width/height = 2
     double height = size.height;
     double width = size.width;
+
+    assert(height.isFinite || width.isFinite);
+
     if (height.isInfinite) {
       height = width / 2;
     } else if (width.isInfinite) {
